@@ -9,7 +9,9 @@ Public URL: https://bluepearlretreat.github.io/crystal-beach-kiosk/
 ## Files
 - `index.html`: the page. All property settings are in the `CONFIG` block at the top.
 - `beach.jpg`: background photo, 1920x1080 crop of Pexels 32942402 ("Seagull strolling on Destin beach shoreline", Esteban Carriazo, free Pexels license).
-- `guest-config.json`: `{ "guestName": "...", "checkoutDate": "YYYY-MM-DD" }`, same keys as Blue Pearl's control panel. The page also accepts `name`/`checkout`.
+- `control-panel.html`: phone page for the host. Sets the guest name and checkout date and has a "Wake TV Now" button. It writes `guest-config.json` through the GitHub API with a fine-grained token saved on that phone only (Contents: read and write, this repo only). Open https://bluepearlretreat.github.io/crystal-beach-kiosk/control-panel.html and add it to the home screen.
+- `manifest.json`, `apple-touch-icon.png`, `icon-512.png`, `favicon-32.png`: home-screen icon (from the beach photo).
+- `guest-config.json`: `{ "guestName": "...", "checkoutDate": "YYYY-MM-DD" }`, same keys as Blue Pearl's control panel. The page also accepts `name`/`checkout`. The kiosk re-reads it every 2 minutes. `wakeRequest` (an ISO time) is set by the Wake button; the Pi's `wake-watcher.py` (user timer, every minute) wakes the TV over HDMI-CEC when it changes. The Pi only reads the public file and holds no token.
 
 ## Background priority
 Live webcam (HLS `.m3u8` via hls.js, or a snapshot image URL) > `beach.jpg` > the built-in SVG scene.
@@ -26,7 +28,6 @@ If the cam moves to a server not in `hdrelayServers`, add the name there (and to
 Every 15 min the page checks that it can reach the site before reloading. If the internet is down, it keeps the current screen and checks again every minute. The local fallback copy (`file://`) switches back to the live site as soon as the site is reachable.
 
 ## TODO before go-live
-- [ ] When the repo/Pages site is live, change the "Crystal Beach kiosk" `source` in `~/camwatch/config.json` from this local file to the Pages URL.
 - [ ] `wifiSsid` / `wifiPassword`: blank for now. The tile says "Ask your host" and the QR tile is hidden until these are set.
 - [ ] `guideUrl`: blank for now. The guide QR is hidden until it is set.
 - [ ] `latitude` / `longitude`: approximate Crystal Beach (30.3832, -86.4282). Replace with the exact address if wanted.

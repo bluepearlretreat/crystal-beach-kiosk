@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Welcome to Crystal Beach Luxury</title>
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Crystal Beach">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
@@ -342,12 +345,18 @@
   tick(); setInterval(tick, 30000);
 
   // ---- Guest name (auto-expires after checkout) ----
-  fetch(CONFIG.guestConfigUrl + "?t=" + Date.now()).then(r => r.json()).then(cfg => {
-    const name = (cfg.guestName || cfg.name || "").trim();
-    const checkout = cfg.checkoutDate || cfg.checkout;
-    const expired = checkout && new Date() > new Date(checkout + "T23:59:59");
-    if (name && !expired) $("guest").textContent = "Hello, " + name + ".";
-  }).catch(() => {});
+  // Checked every 2 minutes so a name set from the control panel shows up quickly.
+  function loadGuest() {
+    fetch(CONFIG.guestConfigUrl + "?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(cfg => {
+      const name = (cfg.guestName || cfg.name || "").trim();
+      const checkout = cfg.checkoutDate || cfg.checkout;
+      const expired = checkout && new Date() > new Date(checkout + "T23:59:59");
+      const text = (name && !expired) ? "Hello, " + name + "." : CONFIG.greeting;
+      if ($("guest").textContent !== text) $("guest").textContent = text;
+    }).catch(() => {});
+  }
+  loadGuest();
+  setInterval(loadGuest, 2 * 60 * 1000);
 
   // ---- Background layers ----
   const bg = $("bg"), photo = $("photo"), cam = $("cam");
