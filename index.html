@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome to Crystal Beach Luxury</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<style>
+  :root {
+    --deep: #0A1F26;
+    --lagoon: #1C5560;
+    --sand: #EADFC8;
+    --ivory: #F7F2E7;
+    --brass: #C9A96A;
+    --display: 'Cormorant Garamond', 'Times New Roman', serif;
+    --ui: 'Jost', 'Helvetica Neue', Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--deep); color: var(--ivory); font-family: var(--ui); overflow: hidden; }
+
+  /* ---------- Background stack (priority: live webcam > photo > designed scene) ---------- */
+  .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+  .bg > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .scene, .photo, .cam { transition: opacity 1.4s ease; }
+  .photo, .cam { object-fit: cover; opacity: 0; }
+  .scene svg { display: block; width: 100%; height: 100%; }
+  .bg.photo-on .scene { opacity: 0; }
+  .bg.photo-on .photo { opacity: 1; }
+  .bg.live .scene, .bg.live .photo { opacity: 0; }
+  .bg.live .cam { opacity: 1; }
+
+  /* Editorial grading: darkens the left for the welcome copy and the bottom for the info bar */
+  .grade {
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, rgba(4,58,64,.72) 0%, rgba(4,58,64,.4) 38%, rgba(4,58,64,0) 66%),
+      linear-gradient(180deg, rgba(8,24,30,.25) 0%, rgba(8,24,30,0) 35%, rgba(8,24,30,0) 55%, rgba(8,24,30,.7) 100%),
+      radial-gradient(ellipse at 50% 42%, rgba(0,0,0,0) 58%, rgba(3,10,13,.5) 100%);
+  }
+  .grain { pointer-events: none; opacity: .07; mix-blend-mode: overlay; }
+
+  /* Slow, GPU-friendly water motion for the designed scene */
+  .wave { animation: drift linear infinite; will-change: transform; }
+  .w1 { animation-duration: 58s; } .w2 { animation-duration: 44s; animation-direction: reverse; }
+  .w3 { animation-duration: 36s; } .w4 { animation-duration: 27s; animation-direction: reverse; }
+  .w5 { animation-duration: 21s; }
+  @keyframes drift { from { transform: translateX(0); } to { transform: translateX(-1920px); } }
+  .glint { animation: glint 6s ease-in-out infinite; }
+  .glint.b { animation-duration: 9s; animation-delay: -3s; }
+  .glint.c { animation-duration: 13s; animation-delay: -7s; }
+  @keyframes glint { 0%,100% { opacity: .15; } 50% { opacity: .75; } }
+  @media (prefers-reduced-motion: reduce) { .wave, .glint { animation: none; } }
+
+  /* ---------- Layout ---------- */
+  .page { position: relative; z-index: 2; height: 100%; display: grid; grid-template-rows: auto 1fr auto; padding: 56px 80px 0; }
+
+  header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .mark { display: flex; align-items: center; gap: 18px; }
+  .mark svg { width: 64px; height: 64px; flex: none; }
+  .mark .name { font-family: var(--display); font-size: 30px; letter-spacing: .16em; text-transform: uppercase; color: var(--ivory); line-height: 1; }
+  .mark .sub { font-size: 13px; letter-spacing: .42em; text-transform: uppercase; color: var(--brass); margin-top: 8px; }
+  .clock { text-align: right; font-size: 17px; letter-spacing: .14em; color: var(--sand); font-weight: 300; line-height: 1.6; }
+
+  main { align-self: center; max-width: 900px; }
+  .eyebrow { font-size: 15px; letter-spacing: .4em; text-transform: uppercase; color: var(--brass); margin: 0 0 22px; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: 152px; line-height: .9; margin: 0; letter-spacing: -.012em; text-shadow: 0 3px 40px rgba(0,0,0,.3); }
+  h1 em { display: block; font-style: italic; color: var(--sand); font-size: 0.55em; letter-spacing: .01em; margin-top: 14px; }
+  .greet { font-family: var(--display); font-style: italic; font-size: 46px; color: var(--ivory); margin: 34px 0 0; opacity: 0; transform: translateY(12px); animation: rise 1.6s ease .4s forwards; }
+  .lede { font-size: 21px; line-height: 1.55; font-weight: 300; color: var(--sand); max-width: 560px; margin: 18px 0 0; }
+  .host { margin-top: 30px; font-size: 15px; letter-spacing: .3em; text-transform: uppercase; color: var(--brass); }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  /* ---------- Info bar ---------- */
+  .bar {
+    display: grid; grid-template-columns: 1.55fr 1.35fr 1fr 1fr 1fr;
+    margin: 0 -80px; padding: 0 80px; height: 220px;
+    background: linear-gradient(180deg, rgba(8,24,30,.55), rgba(8,24,30,.86));
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(201,169,106,.5);
+  }
+  .tile { display: flex; align-items: center; gap: 24px; padding: 0 30px; border-left: 1px solid rgba(201,169,106,.22); min-width: 0; }
+  .tile:first-child { border-left: 0; padding-left: 0; }
+  .tile .label { font-size: 13px; letter-spacing: .32em; text-transform: uppercase; color: var(--brass); margin-bottom: 12px; }
+  .tile .value { font-family: var(--display); font-size: 34px; line-height: 1.05; color: var(--ivory); }
+  .tile .small { font-size: 15px; color: var(--sand); margin-top: 8px; font-weight: 300; line-height: 1.45; }
+  .tile .big { font-family: var(--display); font-size: 68px; line-height: .95; color: var(--ivory); }
+  .qr { width: 136px; height: 136px; background: var(--ivory); padding: 8px; flex: none; }
+  .qr img { width: 100%; height: 100%; display: block; }
+  .pair { display: flex; gap: 18px; }
+  .pair .qr { width: 126px; height: 126px; }
+  .cap { font-size: 12px; letter-spacing: .26em; text-transform: uppercase; color: var(--sand); margin-top: 10px; text-align: center; }
+  .tile .text { min-width: 0; }
+
+  @media (max-width: 1100px) {
+    h1 { font-size: 104px; }
+    .bar { grid-template-columns: 1fr 1fr; height: auto; padding: 24px 40px; margin: 0 -40px; row-gap: 22px; }
+    .tile { padding: 0 20px; }
+    .page { padding: 40px 40px 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ CONFIG: edit these for each property ============ -->
+<script>
+  const CONFIG = {
+    houseName: "Crystal Beach",
+    houseSuffix: "Luxury",
+    hostName: "Hunter",
+    tagline: "Welcome Home",
+    greeting: "We are delighted you are here.",
+    lede: "Everything you need for a restful stay is just a glance away. Scan a code for the Wi-Fi or our welcome guide, and let the water do the rest.",
+    timezone: "America/Chicago",
+    // Live webcam: HLS (.m3u8) stream or a snapshot image URL. Blank = photo or designed scene.
+    // Same Pompano Joe's (Miramar Beach) cam the Blue Pearl kiosk uses.
+    // HDRelay cams can move between servers (this one moved watch. -> east2. in Nov 2026), so for
+    // hdrelay.io URLs the page looks up the current server each time it connects (see findCamUrl).
+    webcamUrl: "https://east2.hdrelay.io/live/cam_five_star___pompano_joe_s_1781797463071/index.m3u8",
+    hdrelayProfile: "p_mqjq0ruimd7h", // the cam's "Public embed" profile, used for the server lookup
+    hdrelayServers: ["east2", "watch", "east", "east1", "east3", "west", "west1", "west2", "central", "central1"],
+    webcamRefreshSeconds: 60,
+    // Background photo (beach.jpg beside this file). Stock: Destin beach, Esteban Carriazo / Pexels 32942402 (free Pexels license)
+    photoUrl: "beach.jpg",
+    // Weather and ocean conditions use these coordinates (Open-Meteo, no API key)
+    latitude: 30.3935,   // Same coordinates as Blue Pearl (Destin FL), per owner
+    longitude: -86.4958,
+    // Wi-Fi and welcome guide QR codes
+    // TODO before go-live: set the property's guest Wi-Fi. Blank = tile says "Ask your host", no QR.
+    wifiSsid: "",
+    wifiPassword: "",
+    wifiSecurity: "WPA",
+    // TODO before go-live: welcome guide link. Blank = guide QR hidden.
+    guideUrl: "",
+    // Public site address; the local fallback copy switches back to it once the internet returns.
+    siteUrl: "https://bluepearlretreat.github.io/crystal-beach-kiosk/",
+    guestConfigUrl: "guest-config.json" // Blue Pearl format { "guestName": "...", "checkoutDate": "YYYY-MM-DD" } (also accepts name/checkout)
+  };
+</script>
+
+<div class="bg" id="bg">
+  <!-- Designed fallback scene (SVG, no external files) -->
+  <div class="scene" aria-hidden="true">
+    <svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7FC8D8"/>
+          <stop offset=".35" stop-color="#B9E4EC"/>
+          <stop offset=".58" stop-color="#E8F5F3"/>
+          <stop offset=".64" stop-color="#FBF4E4"/>
+        </linearGradient>
+        <radialGradient id="sunGlow" cx="1400" cy="560" r="620" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#FFF4DC" stop-opacity=".95"/>
+          <stop offset=".18" stop-color="#F3DDB0" stop-opacity=".55"/>
+          <stop offset=".5" stop-color="#C9A96A" stop-opacity=".12"/>
+          <stop offset="1" stop-color="#C9A96A" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="sunCore" cx="1400" cy="560" r="90" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#FFFBF0"/>
+          <stop offset="1" stop-color="#F6E3BE" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3CC6B4"/>
+          <stop offset=".35" stop-color="#17938C"/>
+          <stop offset="1" stop-color="#0A5F66"/>
+        </linearGradient>
+        <linearGradient id="horizonLine" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#C9A96A" stop-opacity="0"/>
+          <stop offset=".5" stop-color="#F7EBCF" stop-opacity=".9"/>
+          <stop offset="1" stop-color="#C9A96A" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="waveA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5FE0CC" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#1FA7A0" stop-opacity=".25"/>
+        </linearGradient>
+        <linearGradient id="waveB" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2ED3BF" stop-opacity=".45"/>
+          <stop offset="1" stop-color="#0E8F8A" stop-opacity=".35"/>
+        </linearGradient>
+        <linearGradient id="waveC" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#22B8A8" stop-opacity=".5"/>
+          <stop offset="1" stop-color="#0B7C7A" stop-opacity=".5"/>
+        </linearGradient>
+        <linearGradient id="sandGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#FFFCF5"/>
+          <stop offset=".5" stop-color="#EFE5CE"/>
+          <stop offset="1" stop-color="#D8C8A6"/>
+        </linearGradient>
+        <linearGradient id="duneHighlight" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#F3E3C0" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#F3E3C0" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="noise" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/>
+          <feColorMatrix type="saturate" values="0"/>
+        </filter>
+        <path id="crest" d="M0,0 C160,-44 320,44 480,0 S800,-44 960,0 S1280,44 1440,0 S1760,-44 1920,0 S2240,44 2400,0 S2720,-44 2880,0 S3200,44 3360,0 S3680,-44 3840,0 L3840,400 L0,400 Z"/>
+      </defs>
+      <rect width="1920" height="1080" fill="url(#sky)"/>
+      <circle class="sun" cx="1400" cy="560" r="620" fill="url(#sunGlow)"/>
+      <circle cx="1400" cy="560" r="90" fill="url(#sunCore)"/>
+      <rect y="606" width="1920" height="40" fill="#F0DDB8" opacity=".12"/>
+      <rect y="640" width="1920" height="440" fill="url(#sea)"/>
+      <rect y="640" width="1920" height="2" fill="url(#horizonLine)"/>
+      <g opacity=".7">
+        <rect class="glint" x="1330" y="652" width="150" height="3" rx="1.5" fill="#FFF1D2"/>
+        <rect class="glint b" x="1380" y="672" width="90" height="3" rx="1.5" fill="#FFF1D2"/>
+        <rect class="glint c" x="1350" y="700" width="120" height="3" rx="1.5" fill="#FFF1D2"/>
+        <rect class="glint" x="1400" y="730" width="70" height="3" rx="1.5" fill="#FFF1D2"/>
+        <rect class="glint b" x="1330" y="762" width="160" height="3" rx="1.5" fill="#FFF1D2"/>
+      </g>
+      <g transform="translate(0,690)"><use href="#crest" class="wave w1" fill="url(#waveA)"/></g>
+      <g transform="translate(0,760)"><use href="#crest" class="wave w2" fill="url(#waveB)"/></g>
+      <g transform="translate(0,840)"><use href="#crest" class="wave w3" fill="url(#waveC)"/></g>
+      <g transform="translate(0,910)" opacity=".8"><use href="#crest" class="wave w4" fill="url(#waveB)"/></g>
+      <g transform="translate(0,980)" opacity=".7"><use href="#crest" class="wave w5" fill="url(#waveA)"/></g>
+      <path d="M0,930 C300,880 520,905 760,940 C1040,980 1260,930 1560,900 C1740,884 1840,905 1920,915 L1920,1080 L0,1080 Z" fill="url(#sandGrad)" opacity=".92"/>
+      <path d="M0,930 C300,880 520,905 760,940 C1040,980 1260,930 1560,900 C1740,884 1840,905 1920,915" fill="none" stroke="url(#duneHighlight)" stroke-width="3"/>
+      <rect width="1920" height="1080" fill="#FFF3DA" opacity=".035"/>
+      <rect class="grain" width="1920" height="1080" filter="url(#noise)" opacity=".08"/>
+    </svg>
+  </div>
+
+  <img class="photo" id="photo" alt="">
+  <video class="cam" id="cam" autoplay muted playsinline></video>
+  <div class="grade"></div>
+</div>
+
+<div class="page">
+  <header>
+    <div class="mark">
+      <!-- Simple wave monogram -->
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30.5" fill="none" stroke="#C9A96A" stroke-width="1.5"/>
+        <path d="M12 38 C18 32 24 32 32 38 S46 44 52 38" fill="none" stroke="#EADFC8" stroke-width="2" stroke-linecap="round"/>
+        <path d="M12 46 C18 40 24 40 32 46 S46 52 52 46" fill="none" stroke="#C9A96A" stroke-width="1.5" stroke-linecap="round" opacity=".8"/>
+      </svg>
+      <div>
+        <div class="name" id="houseMark"></div>
+        <div class="sub" id="houseSub"></div>
+      </div>
+    </div>
+    <div class="clock" id="clock"></div>
+  </header>
+
+  <main>
+    <p class="eyebrow" id="tagline"></p>
+    <h1 id="headline"></h1>
+    <p class="greet" id="guest"></p>
+    <p class="lede" id="lede"></p>
+    <p class="host" id="host"></p>
+  </main>
+
+  <section class="bar">
+    <div class="tile">
+      <div class="pair">
+        <div>
+          <div class="qr"><img id="qrWifi" alt="Wi-Fi QR code"></div>
+          <div class="cap">Wi-Fi</div>
+        </div>
+        <div>
+          <div class="qr"><img id="qrGuide" alt="Welcome guide QR code"></div>
+          <div class="cap">Welcome Guide</div>
+        </div>
+      </div>
+    </div>
+    <div class="tile">
+      <div class="text">
+        <div class="label">Wi-Fi Network</div>
+        <div class="value" id="wifiName"></div>
+        <div class="small" id="wifiPass"></div>
+      </div>
+    </div>
+    <div class="tile">
+      <div class="text">
+        <div class="label">Ocean</div>
+        <div class="value" id="surf">--</div>
+        <div class="small" id="oceanText">Surf and water</div>
+        <div class="small" id="oceanDetail"></div>
+      </div>
+    </div>
+    <div class="tile">
+      <div class="text">
+        <div class="label">Weather</div>
+        <div class="big" id="temp">--°</div>
+        <div class="small" id="weatherText"></div>
+      </div>
+    </div>
+    <div class="tile">
+      <div class="text">
+        <div class="label">Tomorrow</div>
+        <div class="value" id="tomorrow">&nbsp;</div>
+        <div class="small" id="tomorrowText"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const qr = data => `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&data=${encodeURIComponent(data)}`;
+
+  // ---- Static text ----
+  $("houseMark").textContent = CONFIG.houseName;
+  $("houseSub").textContent = CONFIG.houseSuffix;
+  $("tagline").textContent = CONFIG.tagline;
+  $("headline").innerHTML = "Welcome to " + CONFIG.houseName + "<em>" + CONFIG.houseSuffix + "</em>";
+  $("guest").textContent = CONFIG.greeting;
+  $("lede").textContent = CONFIG.lede;
+  $("host").textContent = "Your host, " + CONFIG.hostName;
+  if (CONFIG.wifiSsid) {
+    $("wifiName").textContent = CONFIG.wifiSsid;
+    $("wifiPass").textContent = CONFIG.wifiPassword ? "Password: " + CONFIG.wifiPassword : "No password needed";
+  } else {
+    $("wifiName").textContent = "Ask your host";
+    $("wifiPass").textContent = "Wi-Fi details coming soon";
+  }
+  const wifiEsc = v => String(v).replace(/([\\;,:"])/g, "\\$1"); // Wi-Fi QR spec: escape \ ; , : "
+  const hideQr = id => { $(id).closest(".pair > div").style.display = "none"; };
+  if (CONFIG.wifiSsid) {
+    $("qrWifi").src = CONFIG.wifiPassword
+      ? qr(`WIFI:T:${CONFIG.wifiSecurity};S:${wifiEsc(CONFIG.wifiSsid)};P:${wifiEsc(CONFIG.wifiPassword)};;`)
+      : qr(`WIFI:T:nopass;S:${wifiEsc(CONFIG.wifiSsid)};;`);
+  } else hideQr("qrWifi");
+  if (CONFIG.guideUrl) $("qrGuide").src = qr(CONFIG.guideUrl); else hideQr("qrGuide");
+  if (!CONFIG.wifiSsid && !CONFIG.guideUrl) { // no codes yet: drop the empty QR tile
+    $("qrWifi").closest(".tile").remove();
+    document.querySelector(".bar").style.gridTemplateColumns = "1.35fr 1fr 1fr 1fr";
+    document.querySelector(".bar .tile").style.cssText = "border-left:0;padding-left:0";
+  }
+
+  // ---- Clock ----
+  function tick() {
+    const now = new Date();
+    const opts = { timeZone: CONFIG.timezone };
+    $("clock").innerHTML =
+      now.toLocaleString("en-US", { ...opts, weekday: "long", month: "long", day: "numeric" }) +
+      "<br>" + now.toLocaleString("en-US", { ...opts, hour: "numeric", minute: "2-digit" });
+  }
+  tick(); setInterval(tick, 30000);
+
+  // ---- Guest name (auto-expires after checkout) ----
+  fetch(CONFIG.guestConfigUrl + "?t=" + Date.now()).then(r => r.json()).then(cfg => {
+    const name = (cfg.guestName || cfg.name || "").trim();
+    const checkout = cfg.checkoutDate || cfg.checkout;
+    const expired = checkout && new Date() > new Date(checkout + "T23:59:59");
+    if (name && !expired) $("guest").textContent = "Hello, " + name + ".";
+  }).catch(() => {});
+
+  // ---- Background layers ----
+  const bg = $("bg"), photo = $("photo"), cam = $("cam");
+  photo.src = CONFIG.photoUrl;
+  photo.onload = () => bg.classList.add("photo-on");
+  photo.onerror = () => bg.classList.remove("photo-on");
+  const camIsStream = /\.m3u8(\?|$)/i.test(CONFIG.webcamUrl);
+  let hls = null, lastT = -1, lastMove = Date.now();
+  let camUrl = CONFIG.webcamUrl;
+  const hdrelayId = (camUrl.match(/^https:\/\/[a-z0-9-]+\.hdrelay\.io\/live\/([^/]+)\/index\.m3u8$/i) || [])[1];
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+  const isLive = url => withTimeout(fetch(url + "?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.text() : ""), 8000)
+    .then(t => t.startsWith("#EXTM3U")).catch(() => false);
+  // Find the HDRelay server the cam is on right now: 1) HDRelay's public player API (browsers currently
+  // reject it because HDRelay sends a doubled CORS header; it starts working if they fix that),
+  // 2) try the cam on each known server. Non-HDRelay URLs are used as-is.
+  async function findCamUrl() {
+    if (!hdrelayId) return camUrl;
+    const onHost = h => "https://" + h + ".hdrelay.io/live/" + hdrelayId + "/index.m3u8";
+    if (CONFIG.hdrelayProfile) {
+      try {
+        const d = await withTimeout(fetch("https://watch.hdrelay.io/api/player-profile/" + hdrelayId + "/" + CONFIG.hdrelayProfile + "?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()), 8000);
+        const u = d && d.streamUrl;
+        if (typeof u === "string" && /^https:\/\/[a-z0-9-]+\.hdrelay\.io\/live\/[^?#]+\.m3u8$/.test(u) && await isLive(u)) return (camUrl = u);
+      } catch (e) { /* fall through to probing */ }
+    }
+    const candidates = [camUrl, ...(CONFIG.hdrelayServers || []).map(onHost).filter(u => u !== camUrl)];
+    for (const u of candidates) { if (await isLive(u)) return (camUrl = u); }
+    return camUrl;
+  }
+  function camDown() {
+    bg.classList.remove("live");
+    if (hls) { hls.destroy(); hls = null; }
+    setTimeout(startCam, CONFIG.webcamRefreshSeconds * 1000); // retry later
+  }
+  function startCam() {
+    if (!CONFIG.webcamUrl) return;
+    if (camIsStream) {
+      findCamUrl().then(url => {
+        if (hls) { hls.destroy(); hls = null; }
+        if (window.Hls && Hls.isSupported()) {
+          hls = new Hls({ liveSyncDurationCount: 3 });
+          hls.loadSource(url);
+          hls.attachMedia(cam);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => cam.play().catch(() => {}));
+          hls.on(Hls.Events.ERROR, (e, d) => { if (d.fatal) camDown(); });
+        } else if (cam.canPlayType("application/vnd.apple.mpegurl")) {
+          cam.onerror = camDown;
+          cam.src = url; cam.play().catch(() => {});
+        }
+      });
+    } else {
+      // Snapshot image: draw it into a poster on the video element's slot
+      const img = new Image();
+      img.onload = () => { cam.poster = img.src; bg.classList.add("live"); setTimeout(startCam, CONFIG.webcamRefreshSeconds * 1000); };
+      img.onerror = camDown;
+      img.src = CONFIG.webcamUrl + (CONFIG.webcamUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
+    }
+  }
+  cam.addEventListener("playing", () => { lastMove = Date.now(); bg.classList.add("live"); });
+  // Watchdog: if the live picture freezes for 90 s, fall back to the photo and retry
+  setInterval(() => {
+    if (!camIsStream || !bg.classList.contains("live")) return;
+    if (cam.currentTime !== lastT) { lastT = cam.currentTime; lastMove = Date.now(); return; }
+    if (Date.now() - lastMove > 90000) camDown();
+  }, 15000);
+  startCam();
+
+  // ---- Weather (Open-Meteo) ----
+  const wxCodes = {0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",48:"Fog",51:"Light drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",80:"Showers",95:"Thunderstorms"};
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.latitude}&longitude=${CONFIG.longitude}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max&temperature_unit=fahrenheit&timezone=${encodeURIComponent(CONFIG.timezone)}&forecast_days=2`)
+    .then(r => r.json()).then(d => {
+      $("temp").textContent = Math.round(d.current.temperature_2m) + "°F";
+      $("weatherText").textContent = wxCodes[d.current.weather_code] || "Current conditions";
+      $("tomorrow").textContent = Math.round(d.daily.temperature_2m_max[1]) + "°F high";
+      $("tomorrowText").textContent = wxCodes[d.daily.weather_code[1]] || "";
+    }).catch(() => { $("weatherText").textContent = "Conditions unavailable"; });
+
+  // ---- Ocean conditions (Open-Meteo Marine) ----
+  function localHourKey() {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: CONFIG.timezone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: false
+    }).formatToParts(new Date());
+    const g = t => parts.find(p => p.type === t).value;
+    return `${g("year")}-${g("month")}-${g("day")}T${g("hour")}:00`;
+  }
+  fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${CONFIG.latitude}&longitude=${CONFIG.longitude}&hourly=wave_height,wave_period,sea_surface_temperature&timezone=${encodeURIComponent(CONFIG.timezone)}&forecast_days=2`)
+    .then(r => r.json()).then(d => {
+      const h = d.hourly;
+      let i = h.time.indexOf(localHourKey());
+      if (i < 0) i = 0;
+      // Near-shore grid points can return nulls; use the nearest later hour that has a value
+      const at = arr => { for (let j = i; j < arr.length; j++) if (arr[j] != null) return arr[j]; return null; };
+      const wave = at(h.wave_height), period = at(h.wave_period), sst = at(h.sea_surface_temperature);
+      if (wave == null) throw new Error("no wave data");
+      const ft = wave * 3.281;
+      const label = ft < 1 ? "Calm" : ft < 2.5 ? "Gentle" : ft < 4 ? "Moderate" : "Rough";
+      $("surf").textContent = ft.toFixed(1) + " ft";
+      $("oceanText").textContent = label + " surf";
+      const bits = [];
+      if (sst != null) bits.push("Water " + Math.round(sst * 9 / 5 + 32) + "°F");
+      if (period != null) bits.push(Math.round(period) + "s swell");
+      $("oceanDetail").textContent = bits.join(" · ");
+    }).catch(() => { $("oceanText").textContent = "Ocean conditions unavailable"; });
+
+  // Refresh every 15 minutes, but only when the internet is reachable, so an
+  // outage never leaves Chromium on an error page. The local fallback copy
+  // (file://) jumps back to the live site as soon as it is reachable again.
+  const isLocal = location.protocol === "file:";
+  function online() {
+    const probe = (isLocal ? CONFIG.siteUrl : location.href.split("#")[0]);
+    return fetch(probe + (probe.includes("?") ? "&" : "?") + "probe=" + Date.now(),
+                 { cache: "no-store", mode: isLocal ? "cors" : "same-origin" })
+      .then(r => r.ok, () => false); // GitHub Pages sends ACAO *, so a 404 or outage reads as offline
+  }
+  function scheduleRefresh(ms) {
+    setTimeout(() => online().then(ok => {
+      if (ok) { if (isLocal) location.href = CONFIG.siteUrl; else location.reload(); }
+      else scheduleRefresh(60 * 1000); // offline: keep the current screen, check again in a minute
+    }), ms);
+  }
+  scheduleRefresh(isLocal ? 60 * 1000 : 15 * 60 * 1000);
+</script>
+</body>
+</html>
