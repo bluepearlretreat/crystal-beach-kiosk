@@ -30,8 +30,8 @@ Every 15 min the page checks that it can reach the site before reloading. If the
 ## TODO before go-live
 - [ ] `wifiSsid` / `wifiPassword`: blank for now. The tile says "Ask your host" and the QR tile is hidden until these are set.
 - [ ] `guideUrl`: blank for now. The guide QR is hidden until it is set.
-- [ ] `latitude` / `longitude`: approximate Crystal Beach (30.3832, -86.4282). Replace with the exact address if wanted.
-- [ ] TV automation (checkin-scheduler, CEC): owner wants it. Needs the **TV model** and the **booking iCal URL**. Copy `~/kiosk/checkin-scheduler.py` + tests from the Blue Pearl Pi (the Pi copy is the source of truth; it is not in the GitHub repo).
+- `latitude` / `longitude`: 30.3935, -86.4958 (same as Blue Pearl, by choice). Change if the exact address is wanted.
+- [ ] TV automation (checkin-scheduler, CEC): owner wants it. Needs the **TV model** and the **booking iCal URL**. Start from Blue Pearl's `checkin-scheduler.py` + tests (kept off GitHub because they contain that property's iCal link). Until then, use the control panel's Wake TV Now.
 
 ## Pi build (done 2026-11-25)
 Pi 5 4GB, Raspberry Pi OS Lite 64-bit (trixie), hostname `crystalbeach-kiosk`, timezone America/Chicago, SSH off, managed through Raspberry Pi Connect (Lite) with linger on.
@@ -39,4 +39,5 @@ Pi 5 4GB, Raspberry Pi OS Lite 64-bit (trixie), hostname `crystalbeach-kiosk`, t
 - Chromium zoom = TV width / 1920 (2 on the 4K Samsung), measured at launch.
 - Hourly restart by the root timer `kiosk-restart.timer`.
 - `/etc/X11/xorg.conf.d/99-kiosk-kms.conf` points X at `/dev/dri/card1`; without it X fails on the Pi 5 with "No devices detected".
+- `wake-watcher.timer` (user unit, every minute, no sudo, no token): wakes the TV over HDMI-CEC when the control panel's `wakeRequest` changes.
 - Webcam playing at 4K: about 56°C, no throttling.
